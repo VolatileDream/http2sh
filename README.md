@@ -1,27 +1,26 @@
 # http2sh
-A terrible hack to send paramaters to a shell command
----
+A terrible hack to send parameters to a shell command
 
 Warning: This piece of software is horribly insecure.
 
-http2sh is designed to take a URL that is provided to it, and execute a shell command with those parameters. It splits the URL into it's component path segments (seperated by '/') and passes each segment as a seperate argument.
+http2sh is designed to take a URL that is provided to it, and execute a shell command with those parameters. It splits the URL into it's component path segments (separated by '/') and passes each segment as a separate argument.
 
-In addition, it takes any command line arguments passed when it is started, and usses them as initial arguments.
+In addition, it takes any command line arguments passed when it is started, and uses them as initial arguments.
 
 ### Examples
 
-( Here we use lines starting withe '>' to denote URLs that are accessed, lines starting with '#' to denote startup parameters, and all other lines are command run. )
+( Here we use lines starting withe '>' to denote URLs that are accessed, lines starting with '#' to denote start up parameters, and all other lines are command run. )
 
 ```
 #
-> http://localhost:4000/hello world
+> http://localhost:4000/hello world/
 echo 'hello world' ''
 ```
 Three things about this example:
 
  * default port is 4000
  * default initial command is 'echo'
- * no trailing slash is required
+ * a trailing slash adds an empty parameter
 
 ```
 # --port 7777 echo Hello
@@ -29,7 +28,7 @@ Three things about this example:
 echo 'Hello' 'world' '!'
 ```
 
-You can change the port it runs on.
+You can change the port it runs on, and the initial command arguments.
 
 ```
 # cat
@@ -42,9 +41,17 @@ Oh, that's scary, isn't it?
 It gets a little scarier...
 
 ```
-# --remap ` cat
-> http://localhost:4000/`etc`passwd
+# --split | cat
+> http://localhost:4000/etc/passwd
+cat 'etc/passwd'
+```
+
+The argument --split changes the string that is used to split the path into arguments. Also notice that the leading '/' is removed, this is because the split string defaults to "/".
+
+```
+# --no-strip --split | cat
+> http://localhost:4000/etc/passwd
 cat '/etc/passwd'
 ```
 
-This software could easily be configured in a very bad way.
+The `--no-strip` flag stops removing the leading '/' character from the path.

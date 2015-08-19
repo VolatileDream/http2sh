@@ -6,20 +6,28 @@ import subprocess
 
 class http2sh(object):
 
-	def __init__(self, shell_start=None, remap_slash=None):
+	def __init__(self, shell_start=None, split=None, no_strip=False):
 
 		if shell_start is None:
 			shell_start = ["echo"]
 
 		self.shell_start = shell_start
-		self.remap_slash = remap_slash
+		self.split = split
+		self.no_strip = no_strip
 
 	def dispatch_request(self, request):
 		args = self.shell_start.copy()
-		path_args = request.path.split("/")[1:]
 
-		if self.remap_slash:
-			path_args = map( lambda x: x.replace(self.remap_slash, "/"), path_args )
+		if self.no_strip:
+			used_path = request.path
+		else:
+			# trim the leading '/' from the path
+			used_path = request.path[1:]
+
+		path_args = [used_path]
+
+		if self.split:
+			path_args = used_path.split(self.split)
 
 		args.extend( path_args )
 
@@ -48,8 +56,11 @@ def arg_parser():
 	parser.add_argument('-p', '--port', type=int, default=4000
 			, help='the port to run on')
 
-	parser.add_argument('-r', '--remap', default=None
-			, help='remap a character to forward slash')
+	parser.add_argument('-s', '--split', default='/'
+			, help="the string used to split urls into parameters, default='/'")
+
+	parser.add_argument('-n', '--no-strip', default=False, action='store_const', const=True
+			, help="by default, the leading '/' is removed from the path, this flag disables that." )
 
 	return parser
 
@@ -61,7 +72,12 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	app = http2sh(shell_start=args.shell_start, remap_slash=args.remap)
+	if len(args.shell_start) == 0:
+		raise Exception('You must provide the program to run. Anything else is horribly horribly insecure.')
+
+	print("Spliting on: %s" % (args.split) )
+
+	app = http2sh(shell_start=args.shell_start, split=args.split, no_strip=args.no_strip)
 
 	run_simple('localhost', args.port, app)
 
