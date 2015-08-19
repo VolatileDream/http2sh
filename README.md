@@ -46,7 +46,7 @@ It gets a little scarier...
 cat 'etc/passwd'
 ```
 
-The argument --split changes the string that is used to split the path into arguments. Also notice that the leading '/' is removed, this is because the split string defaults to "/".
+The argument --split changes the string that is used to split the path into arguments. Also notice that the leading '/' is removed. This is because the split string defaults to "/", and would create an empty first argument. Rather than remove the first argument (and have to check if the split string is "/" or not) we just remove the leading "/" every time. This removal happens before string splitting.
 
 ```
 # --no-strip --split | cat
